@@ -68,3 +68,5 @@ testb项目引入testa项目的依赖：yarn add file: ../testa
 ### 参考文章
 https://lwebapp.com/zh/post/web-worker
 >>>>>>> b0f170ce4fd5e9ffb2a5fa8c24cf616be8d10aff
+### 谷歌浏览器安全策略
+![视频会议谷歌浏览器安全策略](https://github.com/nicky132/videoConference/assets/34881461/c711dbe5-005e-4fde-b47d-3883eb793bec)

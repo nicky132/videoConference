@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>屏幕分享示例</title>
+</head>
+<body>
+  <h1>屏幕分享示例</h1>
+
+  <video id="screenVideo" autoplay></video>
+
+  <script>
+    // 创建一个RTCPeerConnection对象
+    const peerConnection = new RTCPeerConnection();
+
+    // 添加共享屏幕的媒体流到RTCPeerConnection
+    navigator.mediaDevices.getDisplayMedia({ video: true, audio: false })
+      .then(screenStream => {
+        // 监听共享屏幕停止事件
+        screenStream.getVideoTracks()[0].onended = () => {
+            // 处理共享停止的逻辑
+            console.log("----Sharing stopped");
+        };
+
+        // 获取共享屏幕的视频轨道
+        const screenTrack = screenStream.getVideoTracks()[0];
+        console.log("----screenStream.getVideoTracks()", screenStream.getVideoTracks());
+
+        // 添加视频轨道到RTCPeerConnection
+        peerConnection.addTrack(screenTrack, screenStream);
+
+        // 将视频流附加到video元素上以显示屏幕分享
+        const videoElement = document.getElementById('screenVideo');
+        videoElement.srcObject = screenStream;
+
+        // 监听ICE候选事件
+        peerConnection.onicecandidate = event => {
+            if (event.candidate) {
+                // 将候选信息发送给其他对等端
+                // 例如通过WebSocket发送给信令服务器或其他对等端
+                sendIceCandidate(event.candidate);
+            }
+        };
+
+        // 创建一个offer并设置本地描述
+        return peerConnection.createOffer();
+      })
+      .then(offer => {
+        // 设置本地描述
+        return peerConnection.setLocalDescription(offer);
+      })
+      .then(() => {
+        // 将本地描述发送给其他对等端
+        // 例如通过WebSocket发送给信令服务器或其他对等端
+        sendLocalDescription(peerConnection.localDescription);
+      })
+      .catch(error => {
+        console.error("Error accessing screen media: ", error);
+      });
+
+    function sendIceCandidate(candidate) {
+      // 发送ICE候选信息给其他对等端
+    }
+
+    function sendLocalDescription(localDescription) {
+      // 发送本地描述信息给其他对等端
+    }
+  </script>
+</body>
+</html>

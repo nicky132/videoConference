@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+        <title>Baidu Map Demo</title>
+        <style type="text/css">
+            body,
+            html {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                font-family: 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+                    'WenQuanYi Micro Hei', sans-serif;
+            }
+            #container {
+                height: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <div>
+            <button id="zoomInBtn">放大</button>
+            <button id="zoomOutBtn">缩小</button>
+        </div>
+        <!-- <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=HArmZXlgt7yYYtZfnZLr8dj0igEWtsad"></script> -->
+        <script
+            type="text/javascript"
+            src="https://api.map.baidu.com/getscript?v=2.0&ak=HArmZXlgt7yYYtZfnZLr8dj0igEWtsad&s=1"
+        ></script>
+        】
+        <script
+            type="text/javascript"
+            src="https://api.map.baidu.com/library/TextIconOverlay/1.2/src/TextIconOverlay_min.js"
+        ></script>
+        <script
+            type="text/javascript"
+            src="https://api.map.baidu.com/library/MarkerClusterer/1.2/src/MarkerClusterer_min.js"
+        ></script>
+        <script type="text/javascript">
+            // 自定义标记类
+            function CustomMarker(point) {
+                this.point = point;
+                this._map = null; // 添加地图对象的引用
+            }
+    
+            // 实现自定义标记类的 initialize 方法
+            CustomMarker.prototype.initialize = function (map) {
+                var div = document.createElement("div");
+                div.style.position = "absolute";
+                div.style.width = "12px";
+                div.style.height = "12px";
+                div.style.backgroundColor = "red";
+                div.style.borderRadius = "50%";
+                div.style.boxShadow = "0 0 6px rgba(0, 0, 0, 0.3)";
+                map.getPanes().labelPane.appendChild(div);
+                this.div = div;
+                this._map = map; // 保存地图对象的引用
+                return div;
+            };
+    
+            // 实现自定义标记类的 draw 方法
+            CustomMarker.prototype.draw = function () {
+                var map = this._map;
+                var pixel = map.pointToOverlayPixel(this.point);
+                this.div.style.left = pixel.x - 6 + "px";
+                this.div.style.top = pixel.y - 6 + "px";
+            };
+    
+            var map = new BMap.Map("container");
+            var dataList = []; // 存储数据点的数组
+    
+            // 添加数据点，这里仅做示例，实际应用中可以从服务器获取数据
+            for (var i = 0; i < 100; i++) {
+                var point = new BMap.Point(getRandomLng(), getRandomLat());
+                dataList.push(new CustomMarker(point)); // 使用自定义标记类
+                console.log(new CustomMarker(point));
+            }
+    
+            // 设置地图中心点和缩放级别
+            map.centerAndZoom(new BMap.Point(116.404, 39.915), 11);
+    
+            // 监听地图视野变化事件，动态加载附近数据
+            map.addEventListener("zoomend", loadData);
+            map.addEventListener("moveend", loadData);
+    
+            // 初始加载数据
+            loadData();
+    
+            // 加载附近数据
+            function loadData() {
+                var bounds = map.getBounds(); // 获取当前地图视野范围
+                var zoom = map.getZoom(); // 获取当前地图缩放级别
+                var visibleData = dataList.filter(function (marker) {
+                    var markerPoint = marker.point;
+                    return bounds.containsPoint(markerPoint) && zoom >= 10; // 根据条件过滤附近的数据点
+                });
+                console.log('visibleData', visibleData);
+
+                // 清除之前的数据点
+                map.clearOverlays();
+
+                // 添加附近数据点到地图上
+                visibleData.forEach(function (marker) {
+
+                    map.addOverlay(marker);
+                    marker.initialize(map); // 初始化自定义标记类
+                    marker.draw(); // 绘制自定义标记类
+                });
+            }
+    
+            // 监听地图放大按钮点击事件
+            document.getElementById("zoomInBtn").addEventListener("click", function () {
+                map.zoomIn();
+            });
+    
+            // 监听地图缩小按钮点击事件
+            document.getElementById("zoomOutBtn").addEventListener("click", function () {
+                map.zoomOut();
+            });
+    
+            // 生成随机经度
+            function getRandomLng() {
+                return Math.random() * 0.1 + 116.3;
+            }
+    
+            // 生成随机纬度
+            function getRandomLat() {
+                return Math.random() * 0.1 + 39.9;
+            }
+        </script>
+    </body>
+</html>

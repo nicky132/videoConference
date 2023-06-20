@@ -1,0 +1,9 @@
+.DS_Store
+node_modules
+/dist
+
+
+/testa/node_modules
+/testa/dist
+/testb/node_modules
+/testb/dist

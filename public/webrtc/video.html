@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>web视频会议示例</title>
+    </head>
+    <body>
+        <div>
+            <button id="toggleButton">开启摄像头</button>
+            <button id="toggleShareButton">开启共享屏幕</button>
+        </div>
+        <video id="cameraVideo" autoplay></video>
+        <video id="shareVideo" autoplay></video>
+        <script>
+            // 创建一个<video>元素用于显示摄像头视频
+            const videoElement = document.getElementById("cameraVideo");
+            const shareVideoElement = document.getElementById("shareVideo");
+            const toggleButton = document.getElementById("toggleButton");
+            const toggleShareButton = document.getElementById("toggleShareButton");
+            let cameraStream = null;
+            let screenStream = null;
+            let peerConnection = null;
+            // 是否开启共享屏幕
+            toggleShareButton.addEventListener("click", function () {
+                if (!screenStream) {
+                    // 创建一个RTCPeerConnection对象
+                    peerConnection = new RTCPeerConnection();
+                    navigator.mediaDevices.getDisplayMedia({ video: true, audio: false })
+                        .then((stream) => {
+                            screenStream = stream;
+                            // 监听共享屏幕停止事件
+                            screenStream.getVideoTracks()[0].onended = () => {
+                                // 处理共享停止的逻辑
+                                console.log("----Sharing stopped");
+                            };
+                            // 获取共享屏幕的视频轨道
+                            const screenTrack = screenStream.getVideoTracks()[0];
+                            console.log(  "----screenStream.getVideoTracks()", screenStream.getVideoTracks());
+
+                            // 添加视频轨道到RTCPeerConnection
+                            peerConnection.addTrack(screenTrack, screenStream);
+
+                            // 将视频流附加到video元素上以显示屏幕分享
+                            shareVideoElement.srcObject = screenStream;
+                            toggleShareButton.textContent = "停止共享屏幕";
+
+                            // 监听ICE候选事件
+                            peerConnection.onicecandidate = (event) => {
+                                if (event.candidate) {
+                                    // 将候选信息发送给其他对等端
+                                    // 例如通过WebSocket发送给信令服务器或其他对等端
+                                    sendIceCandidate(event.candidate);
+                                }
+                            };
+                            // 创建一个offer并设置本地描述
+                            return peerConnection.createOffer();
+                        })
+                        .then((offer) => {
+                            // 设置本地描述
+                            return peerConnection.setLocalDescription(offer);
+                        })
+                        .then(() => {
+                            // 将本地描述发送给其他对等端
+                            // 例如通过WebSocket发送给信令服务器或其他对等端
+                            sendLocalDescription(peerConnection.localDescription);
+                        })
+                        .catch((error) => {
+                            console.error(
+                                "Error accessing screen media: ",
+                                error
+                            );
+                        });
+                } else {
+                    // 停止屏幕的媒体流
+                    screenStream.getTracks().forEach((track) => track.stop());
+                    screenStream = null;
+                    peerConnection = null;
+                    shareVideoElement.srcObject = null;
+                    toggleShareButton.textContent = "开启共享屏幕";
+                }
+            });
+
+            // 是否开启摄像头
+            toggleButton.addEventListener("click", function () {
+                if (!cameraStream) {
+                    // 获取摄像头的媒体流
+                    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+                        .then((stream) => {
+                            cameraStream = stream;
+                            videoElement.srcObject = cameraStream;
+                            toggleButton.textContent = "关闭摄像头";
+                        })
+                        .catch((error) => {
+                            console.error(
+                                "Error accessing media devices: ",
+                                error
+                            );
+                        });
+                } else {
+                    // 停止摄像头的媒体流
+                    console.log('screenStream.getTracks()', screenStream.getTracks());
+                    cameraStream.getTracks().forEach((track) => track.stop());
+                    cameraStream = null;
+                    videoElement.srcObject = null;
+                    toggleButton.textContent = "开启摄像头";
+                }
+            });
+
+            function sendIceCandidate(candidate) {
+                // 发送ICE候选信息给其他对等端
+                // websocket
+            }
+
+            function sendLocalDescription(localDescription) {
+            // 发送本地描述信息给其他对等端
+            }
+        </script>
+    </body>
+</html>

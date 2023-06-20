@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+        <title>Baidu Map Demo</title>
+        <style type="text/css">
+            body,
+            html {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                font-family: 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+                    'WenQuanYi Micro Hei', sans-serif;
+            }
+            #container {
+                height: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <div>
+            <button id="zoomInBtn">放大</button>
+            <button id="zoomOutBtn">缩小</button>
+        </div>
+        <!-- <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=HArmZXlgt7yYYtZfnZLr8dj0igEWtsad"></script> -->
+        <script
+            type="text/javascript"
+            src="https://api.map.baidu.com/getscript?v=2.0&ak=HArmZXlgt7yYYtZfnZLr8dj0igEWtsad&s=1"
+        ></script>
+        <script
+            type="text/javascript"
+            src="https://api.map.baidu.com/library/TextIconOverlay/1.2/src/TextIconOverlay_min.js"
+        ></script>
+        <script
+            type="text/javascript"
+            src="https://api.map.baidu.com/library/MarkerClusterer/1.2/src/MarkerClusterer_min.js"
+        ></script>
+        <script type="text/javascript">
+            var map = new BMap.Map('container');
+            var dataList = []; // 存储数据点的数组
+            var batchSize = 10; // 每批加载的数据点数量
+            var currentIndex = 0; // 当前数据点的索引
+
+            // 添加数据点，这里仅做示例，实际应用中可以从服务器获取数据
+            for (var i = 0; i < 10000; i++) {
+                var point = new BMap.Point(getRandomLng(), getRandomLat());
+                console.log(point);
+                dataList.push(point);
+            }
+
+
+            // 设置地图中心点和缩放级别
+            map.centerAndZoom(new BMap.Point(116.404, 39.915), 11);
+
+            // 监听地图视野变化事件，动态加载附近数据
+            map.addEventListener('zoomend', loadData);
+            map.addEventListener('moveend', loadData);
+
+            // 初始加载数据
+            loadData();
+
+            // 加载附近数据
+            function loadData() {
+                // 清除之前的数据点
+                map.clearOverlays();
+
+                // 计算当前批次的起始索引和结束索引
+                var startIndex = currentIndex;
+                var endIndex = Math.min(currentIndex + batchSize, dataList.length);
+
+                // 添加附近数据点到地图上
+                for (var i = startIndex; i < endIndex; i++) {
+                    var point = dataList[i];
+                    var marker = new BMap.Marker(point);
+                    map.addOverlay(marker);
+                }
+
+                // 更新当前数据点的索引
+                currentIndex = endIndex;
+            }
+
+            // 生成随机经度
+            function getRandomLng() {
+                return Math.random() * 0.1 + 116.3;
+            }
+
+            // 生成随机纬度
+            function getRandomLat() {
+                return Math.random() * 0.1 + 39.9;
+            }
+
+              // 监听地图放大按钮点击事件
+            document.getElementById("zoomInBtn").addEventListener("click", function () {
+                map.zoomIn();
+            });
+    
+            // 监听地图缩小按钮点击事件
+            document.getElementById("zoomOutBtn").addEventListener("click", function () {
+                map.zoomOut();
+            });
+        </script>
+
+
+
+    </body>
+</html>
